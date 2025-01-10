@@ -1,0 +1,93 @@
+add cluster to spinnaker
+
+take latest image from docker repository
+
+start container
+
+aws eks update-config cluster <clustername> region region-name
+
+kubectl apply -f service-account.yaml
+
+Create secret for service account
+kubectl apply -f - <<EOF
+apiVersion: v1
+kind: Secret
+metadata:
+  name: service-account-secret
+  namespace: spinnaker
+  annotations:
+    kubernetes.io/service-account.name: spinnaker-service-account
+type: kubernetes.io/service-account-token
+EOF
+
+add service account secret token to kube config
+
+export TOKEN=
+
+    kubectl config set-credentials ${CONTEXT}-token-user --token=$TOKEN
+
+    kubectl config set-context $CONTEXT --user ${CONTEXT}-token-user
+
+     hal config provider kubernetes account add argos --context $CONTEXT
+
+hal config provider kubernetes account add  <account-name>  --context <cluster context from eks spinnaker>
+
+hal deploy apply
+
+
+
+
+
+
+Add ecr registry. To spinnaker:
+
+hal config provider docker-registry enable
+
+
+hal config provider docker-registry account add ecr-account \
+  --address 887376482243.dkr.ecr.us-east-1.amazonaws.com \
+  --username AWS \
+  --password-command "aws ecr get-login-password --region us-east-1"
+
+Password command: export CREDENTIALS=$(aws sts assume-role --role-arn arn:aws:iam::887376482243:role/xr1-xaz1-custom-eks-dev-cluster-cross-account-policy --role-session-name spinnaker-session --region us-east-1 --output text) && export AWS_ACCESS_KEY_ID=$(echo $CREDENTIALS | awk '{print $5}') && export AWS_SECRET_ACCESS_KEY=$(echo $CREDENTIALS | awk '{print $7}') && export AWS_SESSION_TOKEN=$(echo $CREDENTIALS | awk '{print $8}') && aws ecr get-login-password --region us-east-1
+
+
+Iam cross account access: 
+In dev cluster, create a role and give it all ecr permissions.
+And in trust relationships,
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "arn:aws:iam::977098985686:role/tools_nodes-eks-node-group-20241204084546860100000002"
+            },
+            "Action": "sts:AssumeRole",
+            "Condition": {}
+        }
+    ]
+}
+
+This will allow the role of spinnaker to assume this role (for pulling images from this account)
+
+This is needed because, dev cluster is in dev account, spinnaker is on eks which is in Argos account.
+
+In Argos account, add a policy to the node group role of eks
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": "sts:AssumeRole",
+            "Resource": "arn:aws:iam::887376482243:role/xr1-xaz1-custom-eks-dev-cluster-cross-account-policy"
+        }
+    ]
+}
+
+The above will enable this role to assume the role in other account.
+
+
+
+
+Always remember, the resources in eks cluster(pods), fall back to the iam roles, if not specifically mentioned.

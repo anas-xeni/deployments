@@ -1,0 +1,54 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2821
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;\f1\fnil\fcharset0 HelveticaNeue;}
+{\colortbl;\red255\green255\blue255;\red13\green16\blue20;\red229\green233\blue233;\red255\green255\blue255;
+\red109\green109\blue109;}
+{\*\expandedcolortbl;;\cssrgb\c5882\c7843\c10196;\cssrgb\c91765\c92941\c92941;\cssrgb\c100000\c100000\c100000;
+\cssrgb\c50196\c50196\c50196;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 The ingress controller issue:\
+\
+The ingress is getting created when done from terraform (helm way)\
+\
+But it isn\'92t creating load balancer on aws\
+\
+The service account needed to be added with annotation to take the iam role:\
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat4 \trbrdrt\brdrnil \trbrdrl\brdrnil \trbrdrt\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clshdrawnil \clwWidth5156\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcfnil \clbrdrl\brdrnil \clbrdrb\brdrs\brdrw20\brdrcf3 \clbrdrr\brdrnil \clpadt20 \clpadl20 \clpadb20 \clpadr20 \gaph\cellx4320
+\clvertalc \clshdrawnil \clwWidth10434\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcfnil \clbrdrl\brdrnil \clbrdrb\brdrs\brdrw20\brdrcf3 \clbrdrr\brdrs\brdrw20\brdrcfnil \clpadt20 \clpadl20 \clpadb20 \clpadr20 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+
+\f1\fs28 \cf2 \expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 eks.amazonaws.com/role-arn\cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf2 arn:aws:iam::887376482243:role/xr1-xaz1-alb-controller-role\cell \lastrow\row
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 \
+\
+The above gives service account the permissions to create LB\
+\
+Now to the role, add the following trust relationship: \
+\{\
+    "Version": "2012-10-17",\
+    "Statement": [\
+        \{\
+            "Effect": "Allow",\
+            "Principal": \{\
+                "Federated": "arn:aws:iam::887376482243:oidc-provider/oidc.eks.us-east-2.amazonaws.com/id/F2BA1854CE419B4EBCA129A9090E11BE"\
+            \},\
+            "Action": "sts:AssumeRoleWithWebIdentity",\
+            "Condition": \{\
+                "StringEquals": \{\
+                    "oidc.eks.us-east-2.amazonaws.com/id/F2BA1854CE419B4EBCA129A9090E11BE:sub": "system:serviceaccount:kube-system:aws-load-balancer-controller",\
+                    "oidc.eks.us-east-2.amazonaws.com/id/F2BA1854CE419B4EBCA129A9090E11BE:aud": "sts.amazonaws.com"\
+                \}\
+            \}\
+        \}\
+    ]\
+\}\
+\
+\
+The above is needed, so that the role trusts the entity and can give the permissions to this mentioned entity}
