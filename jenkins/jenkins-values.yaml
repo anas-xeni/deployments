@@ -1,0 +1,405 @@
+USER-SUPPLIED VALUES:
+additionalAgents: {}
+additionalClouds: {}
+agent:
+  TTYEnabled: false
+  additionalContainers: []
+  alwaysPullImage: false
+  annotations: {}
+  args: ${computer.jnlpmac} ${computer.name}
+  command: null
+  componentName: jenkins-agent
+  connectTimeout: 100
+  containerCap: 10
+  customJenkinsLabels: []
+  defaultsProviderTemplate: ""
+  directConnection: false
+  disableDefaultAgent: false
+  enabled: true
+  envVars: []
+  garbageCollection:
+    enabled: false
+    namespaces: ""
+    timeout: 300
+  hostNetworking: false
+  idleMinutes: 0
+  image:
+    repository: 977098985686.dkr.ecr.us-west-2.amazonaws.com/falcon-dev/jenkins-agent
+    tag: latest
+  imagePullSecretName: null
+  inheritYamlMergeStrategy: false
+  jenkinsTunnel: null
+  jenkinsUrl: null
+  jnlpregistry: null
+  kubernetesConnectTimeout: 5
+  kubernetesReadTimeout: 15
+  livenessProbe: {}
+  maxRequestsPerHostStr: "32"
+  namespace: null
+  nodeSelector: {}
+  nodeUsageMode: NORMAL
+  podLabels: {}
+  podName: default
+  podRetention: Never
+  podTemplates: {}
+  privileged: true
+  resources:
+    limits:
+      cpu: 1600m
+      memory: 1536Mi
+    requests:
+      cpu: 512m
+      memory: 512Mi
+  restrictedPssSecurityContext: false
+  retentionTimeout: 5
+  runAsGroup: 1000
+  runAsUser: 1000
+  fsGroup: 1000
+  secretEnvVars: []
+  serviceAccount: jenkins
+  showRawYaml: true
+  sideContainerName: jnlp
+  skipTlsVerify: false
+  usageRestricted: false
+  useDefaultServiceAccount: false
+  volumes: []
+  waitForPodSec: 600
+  websocket: false
+  workingDir: /home/jenkins/agent
+  workspaceVolume: {}
+  yamlMergeStrategy: override
+  yamlTemplate: ""
+awsSecurityGroupPolicies:
+  enabled: false
+  policies:
+  - name: ""
+    podSelector: {}
+    securityGroupIds: []
+checkDeprecation: true
+clusterZone: cluster.local
+controller:
+  JCasC:
+    authorizationStrategy: |-
+      loggedInUsersCanDoAnything:
+        allowAnonymousRead: false
+    configMapAnnotations: {}
+    configScripts: {}
+    configUrls: []
+    defaultConfig: true
+    overwriteConfiguration: false
+    security:
+      apiToken:
+        creationOfLegacyTokenEnabled: false
+        tokenGenerationOnCreationEnabled: false
+        usageStatisticsEnabled: true
+    securityRealm: |-
+      local:
+        allowsSignup: false
+        enableCaptcha: false
+        users:
+        - id: "${chart-admin-username}"
+          name: "Jenkins Admin"
+          password: "${chart-admin-password}"
+  additionalExistingSecrets: []
+  additionalPlugins: []
+  additionalSecrets: []
+  admin:
+    createSecret: true
+    existingSecret: ""
+    password: null
+    passwordKey: jenkins-admin-password
+    userKey: jenkins-admin-user
+    username: admin
+  affinity: {}
+  agentListenerEnabled: true
+  agentListenerExternalTrafficPolicy: null
+  agentListenerHostPort: null
+  agentListenerLoadBalancerIP: null
+  agentListenerLoadBalancerSourceRanges:
+  - 0.0.0.0/0
+  agentListenerNodePort: null
+  agentListenerPort: 50000
+  agentListenerServiceAnnotations: {}
+  agentListenerServiceType: ClusterIP
+  backendconfig:
+    annotations: {}
+    apiVersion: extensions/v1beta1
+    enabled: false
+    labels: {}
+    name: null
+    spec: {}
+  cloudName: kubernetes
+  clusterIp: null
+  componentName: jenkins-controller
+  containerEnv: []
+  containerEnvFrom: []
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    runAsGroup: 1000
+    runAsUser: 1000
+  csrf:
+    defaultCrumbIssuer:
+      enabled: true
+      proxyCompatability: true
+  customInitContainers: []
+  customJenkinsLabels: []
+  disableRememberMe: false
+  disabledAgentProtocols:
+  - JNLP-connect
+  - JNLP2-connect
+  enableRawHtmlMarkupFormatter: false
+  enableServiceLinks: false
+  executorMode: NORMAL
+  existingSecret: null
+  extraPorts: []
+  fsGroup: 1000
+  googlePodMonitor:
+    enabled: false
+    scrapeEndpoint: /prometheus
+    scrapeInterval: 60s
+  healthProbes: true
+  hostAliases: []
+  hostNetworking: false
+  httpsKeyStore:
+    disableSecretMount: false
+    enable: false
+    fileName: keystore.jks
+    httpPort: 8081
+    jenkinsHttpsJksPasswordSecretKey: https-jks-password
+    jenkinsHttpsJksPasswordSecretName: ""
+    jenkinsHttpsJksSecretKey: jenkins-jks-file
+    jenkinsHttpsJksSecretName: ""
+    jenkinsKeyStoreBase64Encoded: null
+    password: password
+    path: /var/jenkins_keystore
+  image:
+    pullPolicy: Always
+    registry: docker.io
+    repository: jenkins/jenkins
+    tag: null
+    tagLabel: jdk17
+  imagePullSecretName: null
+  ingress:
+    annotations:
+      nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    apiVersion: networking.k8s.io/v1
+    enabled: true
+    hostName: null
+    # labels: {}
+    # path: null
+    paths: 
+      - path: /jenkins
+        pathType: Prefix
+        backend:
+          service:
+            name: jenkins
+            port:
+              number: 8080
+    # resourceRootUrl: null
+    # tls: []
+  initConfigMap: null
+  initContainerEnv: []
+  initContainerEnvFrom: []
+  initContainerResources: {}
+  initScripts: {}
+  initializeOnce: false
+  installLatestPlugins: true
+  installLatestSpecifiedPlugins: false
+  installPlugins:
+  - kubernetes:4302.va_756e4b_67715
+  - workflow-aggregator:600.vb_57cdd26fdd7
+  - git:5.6.0
+  - configuration-as-code:1903.v004d55388f30
+  javaOpts: null
+  jenkinsAdminEmail: null
+  jenkinsHome: /var/jenkins_home
+  jenkinsOpts: null
+  jenkinsRef: /usr/share/jenkins/ref
+  jenkinsUriPrefix: /jenkins
+  jenkinsUrl: null
+  jenkinsUrlProtocol: null
+  jenkinsWar: /usr/share/jenkins/jenkins.war
+  jmxPort: null
+  legacyRemotingSecurityEnabled: false
+  lifecycle: {}
+  loadBalancerIP: null
+  loadBalancerSourceRanges:
+  - 0.0.0.0/0
+  markupFormatter: plainText
+  nodePort: null
+  nodeSelector: {}
+  numExecutors: 0
+  overwritePlugins: false
+  overwritePluginsFromImage: true
+  podAnnotations: {}
+  podDisruptionBudget:
+    annotations: {}
+    apiVersion: policy/v1beta1
+    enabled: false
+    labels: {}
+    maxUnavailable: "0"
+  podLabels: {}
+  podSecurityContextOverride: null
+  priorityClassName: null
+  probes:
+    livenessProbe:
+      failureThreshold: 5
+      httpGet:
+        path: '{{ default "" .Values.controller.jenkinsUriPrefix }}/login'
+        port: http
+      initialDelaySeconds: null
+      periodSeconds: 10
+      timeoutSeconds: 5
+    readinessProbe:
+      failureThreshold: 3
+      httpGet:
+        path: '{{ default "" .Values.controller.jenkinsUriPrefix }}/login'
+        port: http
+      initialDelaySeconds: null
+      periodSeconds: 10
+      timeoutSeconds: 5
+    startupProbe:
+      failureThreshold: 12
+      httpGet:
+        path: '{{ default "" .Values.controller.jenkinsUriPrefix }}/login'
+        port: http
+      periodSeconds: 10
+      timeoutSeconds: 5
+  projectNamingStrategy: standard
+  prometheus:
+    alertingRulesAdditionalLabels: {}
+    alertingrules: []
+    enabled: false
+    metricRelabelings: []
+    prometheusRuleNamespace: ""
+    relabelings: []
+    scrapeEndpoint: /prometheus
+    scrapeInterval: 60s
+    serviceMonitorAdditionalLabels: {}
+    serviceMonitorNamespace: null
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 4096Mi
+    requests:
+      cpu: 500m
+      memory: 1Gi
+  route:
+    annotations: {}
+    enabled: false
+    labels: {}
+    path: null
+  runAsUser: 1000
+  schedulerName: ""
+  scriptApproval: []
+  secondaryingress:
+    annotations: {}
+    apiVersion: extensions/v1beta1
+    enabled: false
+    hostName: null
+    labels: {}
+    paths: []
+    tls: null
+  secretClaims: []
+  securityContextCapabilities: {}
+  serviceAnnotations: {}
+  serviceExternalTrafficPolicy: null
+  serviceLabels: {}
+  servicePort: 8080
+  serviceType: ClusterIP
+  shareProcessNamespace: false
+  sidecars:
+    additionalSidecarContainers: []
+    configAutoReload:
+      additionalVolumeMounts: []
+      containerSecurityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+      enabled: true
+      env: {}
+      envFrom: []
+      folder: /var/jenkins_home/casc_configs
+      image:
+        registry: docker.io
+        repository: kiwigrid/k8s-sidecar
+        tag: 1.28.1
+      imagePullPolicy: IfNotPresent
+      logging:
+        configuration:
+          backupCount: 3
+          formatter: JSON
+          logLevel: INFO
+          logToConsole: true
+          logToFile: false
+          maxBytes: 1024
+          override: false
+      reqRetryConnect: 10
+      resources: {}
+      scheme: http
+      skipTlsVerify: false
+      sleepTime: null
+      sshTcpPort: 1044
+  statefulSetAnnotations: {}
+  statefulSetLabels: {}
+  targetPort: 8080
+  terminationGracePeriodSeconds: null
+  terminationMessagePath: null
+  terminationMessagePolicy: null
+  testEnabled: true
+  tolerations: []
+  topologySpreadConstraints: {}
+  updateStrategy: {}
+  usePodSecurityContext: true
+credentialsId: null
+fullnameOverride: null
+helmtest:
+  bats:
+    image:
+      registry: docker.io
+      repository: bats/bats
+      tag: 1.11.1
+kubernetesURL: https://24B3F07FA84504BB68E940D1218E21BE.gr7.us-west-2.eks.amazonaws.com
+nameOverride: null
+namespaceOverride: null
+networkPolicy:
+  apiVersion: networking.k8s.io/v1
+  enabled: false
+  externalAgents:
+    except: []
+    ipCIDR: null
+  internalAgents:
+    allowed: true
+    namespaceLabels: {}
+    podLabels: {}
+persistence:
+  accessMode: ReadWriteOnce
+  annotations: {}
+  dataSource: {}
+  enabled: true
+  existingClaim: null
+  labels: {}
+  mounts: []
+  size: 8Gi
+  storageClass: null
+  subPath: null
+  volumes: []
+rbac:
+  create: true
+  readSecrets: false
+  useOpenShiftNonRootSCC: false
+renderHelmLabels: true
+serviceAccount:
+  annotations: 
+    eks.amazonaws.com/role-arn: arn:aws:iam::977098985686:role/custom-jenkins-web-identity-irsa
+  create: true
+  extraLabels: {}
+  imagePullSecretName: null
+  name: null
+serviceAccountAgent:
+  annotations: {}
+  create: false
+  extraLabels: {}
+  imagePullSecretName: null
+  name: null

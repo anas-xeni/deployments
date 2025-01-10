@@ -1,0 +1,415 @@
+currentDeployment: default
+deploymentConfigurations:
+- name: default
+  version: 1.35.4
+  providers:
+    appengine:
+      enabled: false
+      accounts: []
+    aws:
+      enabled: false
+      accounts: []
+      bakeryDefaults:
+        baseImages: []
+      defaultKeyPairTemplate: '{{name}}-keypair'
+      defaultRegions:
+      - name: us-west-2
+      defaults:
+        iamRole: BaseIAMRole
+    ecs:
+      enabled: false
+      accounts: []
+    azure:
+      enabled: false
+      accounts: []
+      bakeryDefaults:
+        templateFile: azure-linux.pkr.hcl
+        baseImages: []
+    cloudrun:
+      enabled: false
+      accounts: []
+    dcos:
+      enabled: false
+      accounts: []
+      clusters: []
+    dockerRegistry:
+      enabled: true
+      accounts:
+      - name: my-ecr-account-1
+        requiredGroupMembership: []
+        permissions: {}
+        address: https://887376482243.dkr.ecr.us-west-2.amazonaws.com
+        username: AWS
+        password: eyJwYXlsb2FkIjoieG1rdWJySTllMUxTcW9XOG4vV3VqNFJnTDlsaWJaYzNlSENBUUtha3VnTEFBWlg0ZUpTSmZSNHVhZnhwTFovYkJ1MGh6cDJ6bkhsLytJYUF4bXhFeXI1VFZxd0xxeVd2YThXZFlxaEpjM0RBT083cHJzU291dFUxZz>
+        email: fake.email@spinnaker.io
+        cacheIntervalSeconds: 30
+        clientTimeoutMillis: 60000
+        cacheThreads: 1
+        paginateSize: 100
+        sortTagsByDate: false
+        trackDigests: false
+        insecureRegistry: false
+        repositories: []
+      - name: my-ecr-account-2
+        requiredGroupMembership: []
+        permissions: {}
+        address: https://887376482243.dkr.ecr.us-west-2.amazonaws.com
+        username: AWS
+        password: eyJwYXlsb2FkIjoiTTlqQ3JRSjJWanJlSTZMRFk4YzhBUlh2b2ZxOEJSM2RkaDloOUZ5eE8xczJqci92Rjg4U0hyaWtCc1FFWTVlRmdDeXRGb3VrN1d5dHh0UjdFdDBQWGpZQWtLYjFjL3pEMlhzMERtdzdaQjBOaDNMb2ZkSEEwbVhoMn>
+        email: fake.email@spinnaker.io
+        cacheIntervalSeconds: 30
+        clientTimeoutMillis: 60000
+        cacheThreads: 1
+        paginateSize: 100
+        sortTagsByDate: false
+        trackDigests: false
+        insecureRegistry: false
+        repositories: []
+      - name: my-ecr-account-3
+        requiredGroupMembership: []
+        permissions: {}
+        address: https://887376482243.dkr.ecr.us-east-1.amazonaws.com
+        username: AWS
+        passwordCommand: aws ecr get-login-password --region us-east-1
+        email: fake.email@spinnaker.io
+        cacheIntervalSeconds: 30
+        clientTimeoutMillis: 60000
+        cacheThreads: 1
+        paginateSize: 100
+        sortTagsByDate: false
+        trackDigests: false
+        insecureRegistry: false
+        repositories: []
+      - name: my-ecr-account-4
+        requiredGroupMembership: []
+        permissions: {}
+        address: https://887376482243.dkr.ecr.us-east-1.amazonaws.com
+        username: AWS
+        passwordCommand: aws ecr get-login-password --region us-east-1
+        email: fake.email@spinnaker.io
+        cacheIntervalSeconds: 30
+        clientTimeoutMillis: 60000
+        cacheThreads: 1
+        paginateSize: 100
+        sortTagsByDate: false
+        trackDigests: false
+        insecureRegistry: false
+        repositories: []
+      primaryAccount: my-ecr-account-2
+    google:
+      enabled: false
+      accounts: []
+      bakeryDefaults:
+        templateFile: gce.json
+        baseImages: []
+        zone: us-central1-f
+        network: default
+        useInternalIp: false
+    huaweicloud:
+      enabled: false
+      accounts: []
+      bakeryDefaults:
+        baseImages: []
+    kubernetes:
+      enabled: true
+      accounts:
+      - name: eks-spinnaker
+        requiredGroupMembership: []
+        permissions: {}
+        dockerRegistries: []
+        providerVersion: V2
+        context: eks-spinnaker
+        configureImagePullSecrets: true
+        cacheThreads: 1
+        namespaces: []
+        omitNamespaces: []
+        kinds: []
+        omitKinds: []
+        customResources: []
+        cachingPolicies: []
+        kubeconfigFile: /home/spinnaker/.kube/config
+        rawResourcesEndpointConfig:
+          kindExpressions: []
+          omitKindExpressions: []
+        oAuthScopes: []
+        onlySpinnakerManaged: false
+      - name: falcon-dev-context-account
+        requiredGroupMembership: []
+        permissions: {}
+        dockerRegistries: []
+        providerVersion: V2
+        context: falcon-dev-context
+        configureImagePullSecrets: true
+        cacheThreads: 1
+        namespaces: []
+        omitNamespaces: []
+        kinds: []
+        omitKinds: []
+        customResources: []
+        cachingPolicies: []
+        kubeconfigFile: /home/spinnaker/.kube/config
+        rawResourcesEndpointConfig:
+          kindExpressions: []
+          omitKindExpressions: []
+        oAuthScopes: []
+        onlySpinnakerManaged: false
+      - name: argos
+        requiredGroupMembership: []
+        permissions: {}
+        dockerRegistries: []
+        providerVersion: V2
+        context: argos
+        configureImagePullSecrets: true
+        cacheThreads: 1
+        namespaces: []
+        omitNamespaces: []
+        kinds: []
+        omitKinds: []
+        customResources: []
+        cachingPolicies: []
+        kubeconfigFile: /home/ubuntu/.kube/config
+        rawResourcesEndpointConfig:
+          kindExpressions: []
+          omitKindExpressions: []
+        oAuthScopes: []
+        onlySpinnakerManaged: false
+      primaryAccount: eks-spinnaker
+    tencentcloud:
+      enabled: false
+      accounts: []
+      bakeryDefaults:
+        baseImages: []
+    oracle:
+      enabled: false
+      accounts: []
+      bakeryDefaults:
+        templateFile: oci.json
+        baseImages: []
+    cloudfoundry:
+      enabled: false
+      accounts: []
+  deploymentEnvironment:
+    size: SMALL
+    type: Distributed
+    accountName: eks-spinnaker
+    imageVariant: SLIM
+    updateVersions: true
+    consul:
+      enabled: false
+    vault:
+      enabled: false
+    customSizing: {}
+    sidecars: {}
+    initContainers: {}
+    hostAliases: {}
+    affinity: {}
+    tolerations: {}
+    nodeSelectors: {}
+    gitConfig:
+      upstreamUser: spinnaker
+    livenessProbeConfig:
+      enabled: false
+    haServices:
+      clouddriver:
+        enabled: false
+        disableClouddriverRoDeck: false
+      echo:
+        enabled: false
+  persistentStorage:
+    persistentStoreType: s3
+    azs: {}
+    gcs:
+      rootFolder: front50
+      bucketLocation: ''
+    redis: {}
+    s3:
+      bucket: spin-6df6c335-f3ec-41c1-8f3b-7ecca3513ba7
+      rootFolder: front50
+      pathStyleAccess: false
+      accessKeyId: 
+      secretAccessKey: 
+    oracle: {}
+  features:
+    chaos: false
+    artifacts: true
+  metricStores:
+    datadog:
+      enabled: false
+      tags: []
+    prometheus:
+      enabled: false
+      add_source_metalabels: true
+    stackdriver:
+      enabled: false
+    newrelic:
+      enabled: false
+      tags: []
+    period: 30
+    enabled: false
+  notifications:
+    slack:
+      enabled: false
+    twilio:
+      enabled: false
+      baseUrl: https://api.twilio.com/
+    github-status:
+      enabled: false
+  timezone: America/Los_Angeles
+  ci:
+    jenkins:
+      enabled: false
+      masters: []
+    travis:
+      enabled: false
+      masters: []
+    wercker:
+      enabled: false
+      masters: []
+    concourse:
+      enabled: false
+      masters: []
+    gcb:
+      enabled: false
+      accounts: []
+    codebuild:
+      enabled: false
+      accounts: []
+  repository:
+    artifactory:
+      enabled: false
+      searches: []
+    nexus:
+      enabled: false
+      searches: []
+  security:
+    apiSecurity:
+      ssl:
+        enabled: false
+      overrideBaseUrl: http://a1b5ae82855794d01bb7f1b74c88d1db-1670247587.us-east-1.elb.amazonaws.com
+    uiSecurity:
+      ssl:
+        enabled: false
+      overrideBaseUrl: http://a5a7bd955d1d048fd9afa20586a42313-2124212337.us-east-1.elb.amazonaws.com
+    authn:
+      oauth2:
+        enabled: false
+        client: {}
+        resource: {}
+        userInfoMapping: {}
+      saml:
+        enabled: false
+        userAttributeMapping: {}
+      ldap:
+        enabled: false
+      x509:
+        enabled: false
+      iap:
+        enabled: false
+      enabled: false
+    authz:
+      groupMembership:
+        service: EXTERNAL
+        google:
+          roleProviderType: GOOGLE
+        github:
+          roleProviderType: GITHUB
+        file:
+          roleProviderType: FILE
+        ldap:
+          roleProviderType: LDAP
+      enabled: false
+  artifacts:
+    bitbucket:
+      enabled: false
+      accounts: []
+    gcs:
+      enabled: false
+      accounts: []
+    oracle:
+      enabled: false
+      accounts: []
+    github:
+      enabled: false
+      accounts: []
+    gitlab:
+      enabled: false
+      accounts: []
+    gitrepo:
+      enabled: false
+      accounts: []
+    http:
+      enabled: false
+      accounts: []
+    helm:
+      enabled: false
+      accounts: []
+    s3:
+      enabled: false
+      accounts: []
+    maven:
+      enabled: false
+      accounts: []
+    templates: []
+  pubsub:
+    enabled: false
+    google:
+      enabled: false
+      pubsubType: GOOGLE
+      subscriptions: []
+      publishers: []
+  canary:
+    enabled: true
+    serviceIntegrations:
+    - name: google
+      enabled: false
+      accounts: []
+      gcsEnabled: false
+      stackdriverEnabled: false
+    - name: prometheus
+      enabled: true
+      accounts:
+      - name: ekssample-prom
+        endpoint:
+          baseUrl: http://a866a26afbe974a95a5f6f2f9dc44798-564367526.us-east-1.elb.amazonaws.com
+        supportedTypes:
+        - METRICS_STORE
+    - name: datadog
+      enabled: false
+      accounts: []
+    - name: signalfx
+      enabled: false
+      accounts: []
+    - name: aws
+      enabled: true
+      accounts:
+      - name: ekssample-canary
+        bucket: spin-6df6c335-f3ec-41c1-8f3b-7ecca3513ba7
+        rootFolder: kayenta
+        supportedTypes:
+        - CONFIGURATION_STORE
+        - OBJECT_STORE
+      s3Enabled: true
+    - name: newrelic
+      enabled: false
+      accounts: []
+    reduxLoggerEnabled: true
+    defaultStorageAccount: ekssample-canary
+    defaultJudge: NetflixACAJudge-v1.0
+    defaultMetricsStore: prometheus
+    stagesEnabled: true
+    templatesEnabled: true
+    showAllConfigsEnabled: true
+  spinnaker:
+    extensibility:
+      plugins: {}
+      repositories: {}
+  webhook:
+    trust:
+      enabled: false
+  stats:
+    enabled: true
+    endpoint: https://stats.spinnaker.io
+    instanceId: 01J9V0DG363T2B20KM2VYDP6WY
+    deploymentMethod: {}
+    connectionTimeoutMillis: 3000
+    readTimeoutMillis: 5000

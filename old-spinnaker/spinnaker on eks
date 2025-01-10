@@ -1,0 +1,266 @@
+
+official doc:
+https://spinnaker.io/docs/setup/install/providers/kubernetes-v2/aws-eks/
+
+requires halyard machine to deploy and maintain spinnaker (here ec2)
+kubernetes cluster
+
+
+prepare ec2:
+    # Download and install kubectl
+    curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
+    chmod +x ./kubectl
+    sudo mv ./kubectl /usr/local/bin/kubectl
+
+    # Verify the installation of kubectl
+    kubectl help
+
+    # Download and install aws-iam-authenticator
+    curl -o aws-iam-authenticator https://amazon-eks.s3-us-east-1.amazonaws.com/1.13.7/2019-06-11/bin/linux/amd64/aws-iam-authenticator
+    curl -o aws-iam-authenticator https://amazon-eks.s3.us-west-2.amazonaws.com/1.15.10/2020-02-22/bin/linux/amd64/aws-iam-authenticator
+    chmod +x ./aws-iam-authenticator
+    mkdir -p $HOME/bin && cp ./aws-iam-authenticator $HOME/bin/aws-iam-authenticator && export PATH=$HOME/bin:$PATH
+    echo 'export PATH=$HOME/bin:$PATH' >> ~/.bashrc
+
+    #Verify the installation of aws-iam-authenticator
+    aws-iam-authenticator help
+
+    ------------------------------------------------------------------------------------
+    ## awscli via snap
+    sudo snap install aws-cli --classic
+
+    --------------------------------------------
+    ##eksctl
+
+    # Download and configure eksctl
+    curl --silent --location "https://github.com/eksctl-io/eksctl/releases/download/v0.190.0/eksctl_Linux_amd64.tar.gz" | tar xz -C /tmp
+
+    sudo mv /tmp/eksctl /usr/local/bin
+
+    # Verify the installation
+    eksctl help
+
+    ------------------------------------------------------------
+
+    ##halyard
+
+    # Download and configure Halyard
+    curl -O https://raw.githubusercontent.com/spinnaker/halyard/master/install/debian/InstallHalyard.sh
+
+    sudo useradd halyard
+
+    sudo bash InstallHalyard.sh
+
+    sudo update-halyard
+
+    # Verify the installation
+    hal -v
+
+
+    ---------------------------------------------------------------
+    #need to configure aws with access key and secret access key
+    aws configure
+
+    eksctl create cluster --name=eks-spinnaker --nodes=2 --region=us-east-1 --write-kubeconfig=false
+    eksctl create cluster --name=eks-spinnaker --nodes=2 --region=us-west-2 --write-kubeconfig=false
+
+
+
+
+
+-----------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------------
+
+
+spinnaker eks part:
+
+    Get AWS EKS cluster kubectl context from the cluster created above
+    aws eks update-kubeconfig --name eks-spinnaker --region us-east-1 --alias eks-spinnaker
+    aws eks update-kubeconfig --name eks-spinnaker --region us-west-2 --alias eks-spinnaker
+
+    aws eks update-kubeconfig --name xeni-argos-eks --region us-west-2 --alias argos --profile argos
+    ------------------------------------------------------------------------------------------------------------------
+
+    ##add and configure k8s account for k8s
+
+    # Enable the Kubernetes provider
+    hal config provider kubernetes enable
+
+    # Set the current kubectl context to the cluster for Spinnaker
+    kubectl config use-context eks-spinnaker
+    kubectl config use-context argos
+
+    # Assign the Kubernetes context to CONTEXT
+    CONTEXT=$(kubectl config current-context)
+
+    ##create service account for EKS cluster
+    kubectl apply --context $CONTEXT -f service-account.yml
+
+    ####note : if namespace error comes up here , first create namespace.yml
+    nano namespace.yml 
+    in it , put 
+        apiVersion: v1
+        kind: Namespace
+        metadata:
+            name: spinnaker
+            labels:
+                name: spinnaker
+
+        ----or-----
+        #create namespace like:
+        kubectl create namespace spinnaker
+
+    also,
+        service-account.yml
+            apiVersion: v1
+            kind: ServiceAccount
+            metadata:
+                name: spinnaker-service-account
+                namespace: spinnaker
+
+    then,
+     run kubectl apply --context $CONTEXT -f namespace.yml
+     run kubectl apply --context $CONTEXT -f service-account.yml
+
+
+    TOKEN=$(kubectl get secret --context $CONTEXT \
+    $(kubectl get serviceaccount spinnaker-service-account \
+        --context $CONTEXT \
+        -n spinnaker \
+        -o jsonpath='{.secrets[0].name}') \
+    -n spinnaker \
+    -o jsonpath='{.data.token}' | base64 --decode)
+
+	permanent token instead of temporary
+
+
+    ##set user entry in kubeconfig
+    kubectl config set-credentials ${CONTEXT}-token-user --token=$TOKEN
+
+    kubectl config set-context $CONTEXT --user ${CONTEXT}-token-user
+
+
+    ##Add eks-spinnaker cluster as a Kubernetes provider:
+    hal config provider kubernetes account add eks-spinnaker --context $CONTEXT
+
+    ##allow artifacts
+    hal config features edit --artifacts true
+
+
+    ##configure spinnaker to use aws s3
+    export YOUR_ACCESS_KEY_ID=<access-key>
+    export YOUR_ACCESS_KEY_ID=
+
+
+
+    hal config storage s3 edit --access-key-id $YOUR_ACCESS_KEY_ID \
+    --secret-access-key --region us-east-1
+    
+
+    # above command gives following error:
+                        Validation in default.persistentStorage.s3:
+                        ! ERROR Failed to ensure the required bucket
+                        "spin-86fd04b6-95f8-444c-887f-6b327ddd6b50" exists: The specified
+                        location-constraint is not valid (Service: Amazon S3; Status Code: 400; Error
+                        Code: InvalidLocationConstraint; Request ID: B8QX967W87CDB1Q2; S3 Extended
+                        Request ID:
+                        tr4jTcicSVL+RFXZQ81xYpornbr3mwwMz7McbhaRMckhk9kyA9/J+cF/09CeMKI7TMfadEdL2Vc=;
+                        Proxy: null)
+
+                        - Failed to edit persistent store "s3".
+        
+        to resolve: run it without --region
+
+
+    ##set storage source to s3
+    hal config storage edit --type s3
+
+
+    ## choose spinnaker version & deploy
+    hal version list
+
+    export VERSION=1.19.2
+    hal config version edit --version $VERSION
+
+
+
+
+------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+problems:
+    in step 7 failing at 
+    hal deploy apply
+
+
+
+corrections:
+    used snap to install awscli on ec2
+    sudo snap install aws-cli --classic
+
+    for installing eksctl
+        https://github.com/eksctl-io/eksctl/releases/download/v0.190.0/eksctl_Linux_amd64.tar.gz
+        curl --silent --location "https://github.com/eksctl-io/eksctl/releases/download/v0.190.0/eksctl_Linux_amd64.tar.gz" | tar xz -C /tmp
+
+    change to spinnaker user
+    sudo su - spinnaker
+    before eksctl create cluster
+    configure aws creds
+
+    in step 3:
+        kubectl config set-credentials ${CONTEXT}-token-user --token=$TOKEN
+        // instead of      kubectl config set-credentials ${CONTEXT}-token-user --token $TOKEN
+
+
+hal deploy apply error:
+sudo cp -r .kube /home/spinnaker/.kube
+sudo chown -R spinnaker:spinnaker /home/spinnaker/.kube
+sudo nano /home/spinnaker/.hal/config
+    change kubernetes.kube...   path  from /home/ubuntu/.kube to /home/spinnaker/.kube
+
+
+kubectl config set-credentials ${CONTEXT}-token-user
+user: eks-spinnaker-new-token-user
+password: abc
+CONTEXT: eks-spinnaker-new
+
+
+
+
+problem:
+    /var/lib/dpkg/info/spinnaker-clouddriver.postinst 
+    in the above file, it is installing awscliv2
+    downloads and then unzips the zip file
+    unzip command is failing, because unzip is not present in the machine
+    to try:
+        1) with gunzip or tar
+        2) not install awscli altogether and assume it has it.
+    tried:
+        sudo apt install unzip
+        this gives error: apt has the frontend-lock
+        (dpkg error)
+        E: Could not get lock /var/lib/dpkg/lock-frontend. It is held by process 12142 (apt-get)
+        E: Unable to acquire the dpkg frontend lock (/var/lib/dpkg/lock-frontend), is another process using it?
+
+
+            remove locks
+            sudo rm /var/lib/dpkg/lock
+
+            then run, 
+            sudo dpkg --configure -a
+
+
+helm chart:
+spinnaker    	https://opsmx.github.io/spinnaker-helm/           
+
+

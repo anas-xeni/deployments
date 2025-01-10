@@ -1,0 +1,584 @@
+global:
+  redis:
+    # Below is the password for redis connection to spinnaker
+    password: "password"
+  # Custom Images registry where all the OSS and customized images used in the helm chart are stored
+  # Only update this is using a private repo such as ACR, ECR, GCR, JFrog, etc.
+  customImages:
+    registry: quay.io/opsmxpublic
+#init-containers
+createHalyardLocal:
+  image: 
+    repository: quay.io/opsmxpublic/awsgit
+    tag: v3-js
+halyardconfigUpdate:
+  image: 
+    repository: quay.io/opsmxpublic/k8s-decoder
+    tag: hal
+
+halyard:
+  gitops:
+    enabled: false
+    secretName: opsmx-gitops-auth
+    repo:
+      type: git # git, bitbucket-stash or S3, please use another template for github/stash
+      s3accesskey:  S3_ACCESS_KEY
+      s3secretkey: S3_SECRET_KEY
+      s3bucket: S3_BUCKET_NAME
+      s3region: S3_BUCKET_REGION
+      configArgs: "http.sslVerify=false"
+      baseUrlHostName: github.com    # Specify the Base FQDN of your repository without the protocol
+      organization: GIT_ORGANIZATION
+      projectName:  GIT_PROJECT_NAME  # Specify project name only if repo is under a project
+      repository: GIT_REPO_NAME # repo name for GitOps Halyard (Sample Reference: https://github.com/OpsMx/sample-gitops-repo.git).
+      halConfigBranch: main # Branch under which halyard config is present under above repository
+      halConfigPath: / #relative path from repository root folder
+      dynamicAccRepository: GIT_REPO_NAME # Please provide the repo name of the GitOps Dynamic Accounts Directory. Can be same as Hal repo.
+      dynAccntConfigPath: / #relative path from repository root folder
+      username: GIT_USERNAME  # Username to authenticate with git/stash repo
+      token: GIT_TOKEN
+  # If spinnakerVersion is not specified appVersion in Chart.yml is chosen for Spinnaker
+  spinnakerVersion: 1.30.1
+  image:
+    repository: us-docker.pkg.dev/spinnaker-community/docker/halyard
+    tag: 1.45.0
+    pullSecrets: []
+  # Set to false to disable persistence data volume for halyard
+  persistence:
+    enabled: true
+  # Uncomment to add storage class for the persistence data volume
+  # storageClass: <storageclass_name>
+  # Provide additional parameters to halyard deploy apply command
+  additionalInstallParameters: []
+  # Provide a config map with Hal commands that will be run the core config (storage)
+  # The config map should contain a script in the config.sh key
+  additionalScripts:
+    enabled: false
+    configMapName: my-halyard-config
+    configMapKey: config.sh
+    # If you'd rather do an inline script, set create to true and put the content in the data dict like you would a configmap
+    # The content will be passed through `tpl`, so value interpolation is supported.
+    create: false
+    data: {}
+  additionalSecrets:
+    create: false
+    data: {}
+    ## Uncomment if you want to use a pre-created secret rather than feeding data in via helm.
+    # name:
+  additionalConfigMaps:
+    create: false
+    data: {}
+    ## Uncomment if you want to use a pre-created ConfigMap rather than feeding data in via helm.
+    # name:
+  ## Define custom profiles for Spinnaker services. Read more for details:
+  ## https://www.spinnaker.io/reference/halyard/custom/#custom-profiles
+  ## The contents of the files will be passed through `tpl`, so value interpolation is supported.
+  additionalProfileConfigMaps:
+    data: {}
+      ## if you're running spinnaker behind a reverse proxy such as a GCE ingress
+      ## you may need the following profile settings for the gate profile.
+      ## see https://github.com/spinnaker/spinnaker/issues/1630
+      ## otherwise its harmless and will likely become default behavior in the future
+      ## According to the linked github issue.
+      # gate-local.yml:
+      #   server:
+      #     tomcat:
+      #       protocolHeader: X-Forwarded-Proto
+      #       remoteIpHeader: X-Forwarded-For
+      #       internalProxies: .*
+      #       httpsServerPort: X-Forwarded-Port
+
+  ## Define custom settings for Spinnaker services. Read more for details:
+  ## https://www.spinnaker.io/reference/halyard/custom/#custom-service-settings
+  ## You can use it to add annotations for pods, override the image, etc.
+  additionalServiceSettings: {}
+    # deck.yml:
+    #   artifactId: gcr.io/spinnaker-marketplace/deck:2.9.0-20190412012808
+    #   kubernetes:
+    #     podAnnotations:
+    #       iam.amazonaws.com/role: <role_arn>
+    # clouddriver.yml:
+    #   kubernetes:
+    #     podAnnotations:
+    #       iam.amazonaws.com/role: <role_arn>
+
+  # Additional volumes available for use with Halyard initContainers and containers
+  additionalVolumes: []
+  #  - name: volume1
+  #    configMap:
+  #      name: configMap1
+
+  # Additional volumeMounts to add to Halyard containers
+  additionalVolumeMounts: []
+  #  - name: volumeMount1
+  #    mountPath: /volumeMount1
+
+  additionalSettings:
+    # To override command used in insta-using-hal job
+    installJobCmd: []
+    # - echo
+    # - "Hello, World!"
+
+    # To override command used in cleanup job
+    cleanJobCmd: []
+    # - echo
+    # - "Hello, World!"
+
+  ## Populate to provide a custom local BOM for Halyard to use for deployment. Read more for details:
+  ## https://www.spinnaker.io/guides/operator/custom-boms/#boms-and-configuration-on-your-filesystem
+  bom: ~
+  #   artifactSources:
+  #     debianRepository: https://dl.bintray.com/spinnaker-releases/debians
+  #     dockerRegistry: gcr.io/spinnaker-marketplace
+  #     gitPrefix: https://github.com/spinnaker
+  #     googleImageProject: marketplace-spinnaker-release
+  #   services:
+  #     clouddriver:
+  #       commit: 031bcec52d6c3eb447095df4251b9d7516ed74f5
+  #       version: 6.3.0-20190904130744
+  #     deck:
+  #       commit: b0aac478e13a7f9642d4d39479f649dd2ef52a5a
+  #       version: 2.12.0-20190916141821
+  #     ...
+  #   timestamp: '2019-09-16 18:18:44'
+  #   version: 1.16.1
+
+  ## Define local configuration for Spinnaker services.
+  ## The contents of these files would be copies of the configuration normally retrieved from
+  ## `gs://halconfig/<service-name>`, but instead need to be available locally on the halyard pod to facilitate
+  ## offline installation. This would typically be used along with a custom `bom:` with the `local:` prefix on a
+  ## service version.
+  ## Read more for details:
+  ## https://www.spinnaker.io/guides/operator/custom-boms/#boms-and-configuration-on-your-filesystem
+  ## The key for each entry must be the name of the service and a file name separated by the '_' character.
+  serviceConfigs: {}
+  # clouddriver_clouddriver-ro.yml: |-
+  #   ...
+  # clouddriver_clouddriver-rw.yml: |-
+  #   ...
+  # clouddriver_clouddriver.yml: |-
+  #   ...
+  # deck_settings.json: |-
+  #   ...
+  # echo_echo.yml: |-
+  #   ...
+
+  ## Uncomment if you want to add extra commands to the init script
+  ## run by the init container before halyard is started.
+  ## The content will be passed through `tpl`, so value interpolation is supported.
+  # additionalInitScript: |-
+
+  ## Uncomment if you want to add annotations on halyard and install-using-hal pods
+  # annotations:
+  #   iam.amazonaws.com/role: <role_arn>
+
+  ## Uncomment the following resources definitions to control the cpu and memory
+  # resources allocated for the halyard pod
+  resources: {}
+    # requests:
+    #   memory: "1Gi"
+    #   cpu: "100m"
+    # limits:
+    #   memory: "2Gi"
+    #   cpu: "200m"
+
+  ## Uncomment if you want to set environment variables on the Halyard pod.
+  # env:
+  #   - name: JAVA_OPTS
+  #     value: -Dhttp.proxyHost=proxy.example.com
+  customCerts:
+    ## Enable to override the default cacerts with your own one
+    enabled: false
+    secretName: custom-cacerts
+
+# Define which registries and repositories you want available in your
+# Spinnaker pipeline definitions
+# For more info visit:
+#   https://www.spinnaker.io/setup/providers/docker-registry/
+
+# Configure your Docker registries here
+dockerRegistries:
+- name: dockerhub
+  address: index.docker.io
+  noValidate: false
+  repositories:
+    - library/alpine
+    - library/ubuntu
+    - library/centos
+    - library/nginx
+# - name: gcr
+#   noValidate: false
+#   address: https://gcr.io
+#   username: _json_key
+#   password: '<INSERT YOUR SERVICE ACCOUNT JSON HERE>'
+#   email: 1234@5678.com
+# - name: ecr
+#   noValidate: false
+#   address: <AWS-ACCOUNT-ID>.dkr.ecr.<REGION>.amazonaws.com
+#   username: AWS
+#   passwordCommand: aws --region <REGION> ecr get-authorization-token --output text --query 'authorizationData[].authorizationToken' | base64 -d | sed 's/^AWS://'
+
+# If you don't want to put your passwords into a values file
+# you can use a pre-created secret instead of putting passwords
+# (specify secret name in below `dockerRegistryAccountSecret`)
+# per account above with data in the format:
+# <name>: <password>
+
+# dockerRegistryAccountSecret: myregistry-secrets
+
+kubeConfig:
+  # Use this when you want to register arbitrary clusters with Spinnaker
+  # Upload your ~/kube/.config to a secret
+  enabled: false
+  # secretName: my-kubeconfig
+  # secretKey: config
+  # Use this when you want to configure halyard to reference a kubeconfig from s3
+  # This allows you to keep your kubeconfig in an encrypted s3 bucket
+  # For more info visit:
+  #   https://www.spinnaker.io/reference/halyard/secrets/s3-secrets/#secrets-in-s3
+  # encryptedKubeconfig: encrypted:s3!r:us-west-2!b:mybucket!f:mykubeconfig
+  # List of contexts from the kubeconfig to make available to Spinnaker
+  contexts:
+  - default
+  deploymentContext: default
+  # Use this to limit the namespaces this kubernetes account will access.
+  # Note, if you use nameSpaces, omittedNameSpaces will not be used.
+  # Note, the casing of the nameSpace variable here.
+  # nameSpaces:
+  # - namespace1
+  # - namespace2
+  omittedNameSpaces:
+  - kube-system
+  - kube-public
+  onlySpinnakerManaged:
+    enabled: false
+
+  # When false, clouddriver will skip the permission checks for all kubernetes kinds at startup.
+  # This can save a great deal of time during clouddriver startup when you have many kubernetes
+  # accounts configured. This disables the log messages at startup about missing permissions.
+  checkPermissionsOnStartup: true
+
+  # A list of resource kinds this Spinnaker account can deploy to and will cache.
+  # When no kinds are configured, this defaults to ‘all kinds'.
+  # kinds:
+  # -
+
+  # A list of resource kinds this Spinnaker account cannot deploy to or cache.
+  # This can only be set when –kinds is empty or not set.
+  # omittedKinds:
+  # -
+
+  # When true, clouddriver will query manifest status during pipeline executions using live
+  # data rather than the cache. This eliminates all time spent in the “force cache refresh”
+  # task in pipelines, greatly reducing execution time.
+  liveManifestCalls: false
+
+# Change this if youd like to expose Spinnaker outside the cluster
+ingress:
+  enabled: false
+#   # className: 
+#   # host: spinnaker.example.org
+#   # annotations:
+#     # ingress.kubernetes.io/ssl-redirect: 'true'
+#     # kubernetes.io/ingress.class: nginx
+#     # kubernetes.io/tls-acme: "true"
+#   # tls:
+#   #  - secretName: -tls
+#   #    hosts:
+#   #      - domain.com
+
+# ingress:
+#   enabled: true
+#   annotations:
+#     kubernetes.io/ingress.class: nginx
+#     nginx.ingress.kubernetes.io/rewrite-target: /
+#     nginx.ingress.kubernetes.io/ssl-redirect: "false"
+#   hosts:
+#     - paths:
+#         - path: /ui
+#           pathType: Prefix
+#           service:
+#             name: spin-deck
+#             port: 9000
+#         - path: /api
+#           pathType: Prefix
+#           service:
+#             name: spin-gate
+#             port: 8084
+
+deck:
+  enabled: true
+  image:
+    repository: gcr.io/spinnaker-marketplace/deck
+    tag: 2.23.0
+  service:
+    type: ClusterIP # Use ClusterIP since Ingress will handle external access
+    port: 9000
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# Gate (API) configuration
+gate:
+  enabled: true
+  image:
+    repository: gcr.io/spinnaker-marketplace/gate
+    tag: 2.20.0
+  service:
+    type: ClusterIP # Use ClusterIP since Ingress will handle external access
+    port: 8084
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+
+ingressGate:
+  enabled: false
+  # host: gate.spinnaker.example.org
+  # annotations:
+    # ingress.kubernetes.io/ssl-redirect: 'true'
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  # tls:
+  #  - secretName: -tls
+  #    hosts:
+  #      - domain.com
+
+# spinnakerFeatureFlags is a list of Spinnaker feature flags to enable
+# Ref: https://www.spinnaker.io/reference/halyard/commands/#hal-config-features-edit
+# spinnakerFeatureFlags:
+#   - artifacts
+#   - pipeline-templates
+spinnakerFeatureFlags: []
+
+# Node labels for pod assignment
+# Ref: https://kubernetes.io/docs/user-guide/node-selection/
+# nodeSelector to provide to each of the Spinnaker components
+nodeSelector: {}
+
+# Node tolerations
+# Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
+tolerations: []
+
+# Redis password to use for the in-cluster redis service
+# Enable redis to use in-cluster redis
+redis:
+  enabled: true
+  # External Redis option will be enabled if in-cluster redis is disabled
+  external:
+    host: "<EXTERNAL-REDIS-HOST-NAME>"
+    port: 6379
+    # password: ""
+  password: password
+  nodeSelector: {}
+  cluster:
+    enabled: false
+# Uncomment if you don't want to create a PVC for redis
+#  master:
+#    persistence:
+#      enabled: false
+
+# Minio access/secret keys for the in-cluster S3 usage
+# Minio is not exposed publically
+minio:
+  enabled: true
+  image:
+    tag: RELEASE.2020-01-03T19-12-21Z
+  service:
+    type: ClusterIP
+  accessKey: spinnakeradmin
+  secretKey: spinnakeradmin
+  defaultBucket:
+    enabled: true
+    name: "spinnaker"
+  nodeSelector: {}
+
+  # Minio persistent storage settings
+  persistence:
+    size: 10Gi
+    # Uncomment below line if you don't want to enable persistent storage
+    # for minio
+    # enabled: false
+
+# Google Cloud Storage
+gcs:
+  enabled: false
+  project: my-project-name
+  bucket: "<GCS-BUCKET-NAME>"
+  ## if jsonKey is set, will create a secret containing it
+  jsonKey: '<INSERT CLOUD STORAGE JSON HERE>'
+  ## override the name of the secret to use for jsonKey, if `jsonKey`
+  ## is empty, it will not create a secret assuming you are creating one
+  ## external to the chart. the key for that secret should be `key.json`.
+  secretName:
+
+# AWS Simple Storage Service
+s3:
+  enabled: false
+  bucket: "<S3-BUCKET-NAME>"
+  # rootFolder: "front50"
+  # region: "us-east-1"
+  # endpoint: ""
+  # accessKey: ""
+  # secretKey: ""
+  # assumeRole: "<role to assume>"
+  ## Here you can pass extra arguments to configure s3 storage options
+  extraArgs: []
+  #  - "--path-style-access true"
+
+# Azure Storage Account
+azs:
+  enabled: false
+#   storageAccountName: ""
+#   accessKey: ""
+#   containerName: "spinnaker"
+
+rbac:
+  # Specifies whether RBAC resources should be created
+  create: true
+  # Specifies whether PSP resources should be created
+  pspEnabled: false
+
+serviceAccount:
+  # Specifies whether a ServiceAccount should be created
+  create: true
+  # The name of the ServiceAccounts to use.
+  # If left blank it is auto-generated from the fullname of the release
+  halyardName:
+  spinnakerName:
+  serviceAccountAnnotations: {}
+securityContext:
+  # Specifies permissions to write for user/group
+  runAsUser: 1000
+  fsGroup: 1000
+
+## OpenLDAP custom configuration; will override default configuration of
+## openldap helm chart
+##
+openldap:
+  enabled: false
+  # Password for the admin user; by default it is set to admin
+  adminPassword: opsmxadmin123
+  configPassword: opsmxconfig123
+  omitClusterIP: true
+  persistence:
+    enabled: true
+  env:
+    LDAP_REMOVE_CONFIG_AFTER_SETUP: "false"
+
+  customLdifFiles:
+    01-memberof.ldif: |-
+      dn: cn=module,cn=config
+      cn: module
+      objectClass: olcModuleList
+      olcModuleLoad: memberof.la
+      olcModulePath: /usr/lib/ldap
+
+      dn: olcOverlay={0}memberof,olcDatabase={1}hdb,cn=config
+      objectClass: olcConfig
+      objectClass: olcMemberOf
+      objectClass: olcOverlayConfig
+      objectClass: top
+      olcOverlay: memberof
+      olcMemberOfDangling: ignore
+      olcMemberOfRefInt: TRUE
+      olcMemberOfGroupOC: groupOfNames
+      olcMemberOfMemberAD: member
+      olcMemberOfMemberOfAD: memberOf
+    02-refint1.ldif: |-
+      dn: cn=module{1},cn=config
+      changetype: modify
+      add: olcmoduleload
+      olcmoduleload: refint.la
+    03-refint2.ldif: |-
+      dn: olcOverlay={1}refint,olcDatabase={1}hdb,cn=config
+      objectClass: olcConfig
+      objectClass: olcOverlayConfig
+      objectClass: olcRefintConfig
+      objectClass: top
+      olcOverlay: {1}refint
+      olcRefintAttribute: memberof member manager owner
+    04-add_ou.ldif: |-
+      dn: ou=groups,dc=example,dc=org
+      objectClass: organizationalUnit
+      ou: Groups
+    05-admin.ldif: |-
+      dn: cn=admin,ou=groups,dc=example,dc=org
+      objectClass: groupofnames
+      cn: admin
+      description: read write and execute group
+      member: cn=admin,dc=example,dc=org
+    06-developer.ldif: |-
+      dn: cn=developers,ou=groups,dc=example,dc=org
+      objectClass: groupofnames
+      cn: developers
+      description: read only users
+      member: cn=admin,dc=example,dc=org
+      member: cn=developer,dc=example,dc=org
+    07-qa.ldif: |-
+      dn: cn=QA,ou=groups,dc=example,dc=org
+      objectClass: groupofnames
+      cn: QA
+      description: read only users
+      member: cn=admin,dc=example,dc=org
+      member: cn=qa,dc=example,dc=org
+    08-manager.ldif: |-
+      dn: cn=managers,ou=groups,dc=example,dc=org
+      objectClass: groupofnames
+      cn: managers
+      description: read and execute group
+      member: cn=admin,dc=example,dc=org
+      member: cn=manager,dc=example,dc=org
+    09-IT-manager.ldif: |-
+      dn: cn=ITManagers,ou=groups,dc=example,dc=org
+      objectClass: groupofnames
+      cn: ITManagers
+      description: read and execute group
+      member: cn=admin,dc=example,dc=org
+      member: cn=ITManager,dc=example,dc=org
+    10-users.ldif: |-
+      dn: cn=user1,dc=example,dc=org
+      objectClass: simpleSecurityObject
+      objectClass: organizationalRole
+      cn: user1
+      userpassword: {SSHA}Y9L4AsYL16WLK10qDZ62pTScFnaWb0nz
+
+      dn: cn=user2,dc=example,dc=org
+      objectClass: simpleSecurityObject
+      objectClass: organizationalRole
+      cn: user2
+      userpassword: {SSHA}DasTBI0eut1F83Bh1F1HXmDT8juJj3pY
+
+      dn: cn=user3,dc=example,dc=org
+      objectClass: simpleSecurityObject
+      objectClass: organizationalRole
+      cn: user3
+      userpassword: {SSHA}Qu1FW7BdLMndwM/Gf+zc3a8VIMAymbuv
+
+      dn: cn=developers,ou=groups,dc=example,dc=org
+      changetype: modify
+      add: member
+      member: cn=user1,dc=example,dc=org
+      member: cn=user3,dc=example,dc=org
+
+      dn: cn=QA,ou=groups,dc=example,dc=org
+      changetype: modify
+      add: member
+      member: cn=user2,dc=example,dc=org
+      member: cn=user3,dc=example,dc=org
+
+## ldap configuration used in oes-gate & oes-platform for authentication
+## and authorization
+ldap:
+  enabled: true
+  url: ldap://{{ .Release.Name }}-openldap:389
+  userDnPattern: cn={0}
+  basedn: dc=example,dc=org # Value of ldap.base.dn
+  adminDn: cn=admin,dc=example,dc=org
+  adminPassword: opsmxadmin123
+  userDisplayName: displayName
+  pattern: (&(cn=USERNAME))
+  userGroupIdentity: memberOf
+  userIdentity: cn
+  userPrepend: cn=USERNAME
+
